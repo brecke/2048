@@ -39,6 +39,30 @@ defmodule GameWeb.GameLive do
     [cell | update_row(rest, x - 1, new_value)]
   end
 
+  def handle_event("handle_key_press", %{"key" => "ArrowLeft"}, socket) do
+    IO.inspect("left!")
+
+    {:noreply, socket}
+  end
+
+  def handle_event("handle_key_press", %{"key" => "ArrowRight"}, socket) do
+    IO.inspect("right!")
+
+    {:noreply, socket}
+  end
+
+  def handle_event("handle_key_press", %{"key" => "ArrowUp"}, socket) do
+    IO.inspect("up!")
+
+    {:noreply, socket}
+  end
+
+  def handle_event("handle_key_press", %{"key" => "ArrowDown"}, socket) do
+    IO.inspect("down!")
+
+    {:noreply, socket}
+  end
+
   def mount(_params, _session, socket) do
     status = generate_array(6, 6)
     x = :rand.uniform(5)

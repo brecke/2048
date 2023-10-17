@@ -1,46 +1,13 @@
-<div class="container mx-auto">
-  <div class="grid grid-cols-6 gap-4">
-    <!-- Row 1 -->
-    <div class="bg-gray-300 p-4 text-center">1</div>
-    <div class="bg-gray-300 p-4 text-center">2</div>
-    <div class="bg-gray-300 p-4 text-center">3</div>
-    <div class="bg-gray-300 p-4 text-center">4</div>
-    <div class="bg-gray-300 p-4 text-center">5</div>
-    <div class="bg-gray-300 p-4 text-center">6</div>
-    <!-- Row 1 -->
-    <div class="bg-gray-300 p-4 text-center">1</div>
-    <div class="bg-gray-300 p-4 text-center">2</div>
-    <div class="bg-gray-300 p-4 text-center">3</div>
-    <div class="bg-gray-300 p-4 text-center">4</div>
-    <div class="bg-gray-300 p-4 text-center">5</div>
-    <div class="bg-gray-300 p-4 text-center">6</div>
-    <!-- Row 1 -->
-    <div class="bg-gray-300 p-4 text-center">1</div>
-    <div class="bg-gray-300 p-4 text-center">2</div>
-    <div class="bg-gray-300 p-4 text-center">3</div>
-    <div class="bg-gray-300 p-4 text-center">4</div>
-    <div class="bg-gray-300 p-4 text-center">5</div>
-    <div class="bg-gray-300 p-4 text-center">6</div>
-    <!-- Row 1 -->
-    <div class="bg-gray-300 p-4 text-center">1</div>
-    <div class="bg-gray-300 p-4 text-center">2</div>
-    <div class="bg-gray-300 p-4 text-center">3</div>
-    <div class="bg-gray-300 p-4 text-center">4</div>
-    <div class="bg-gray-300 p-4 text-center">5</div>
-    <div class="bg-gray-300 p-4 text-center">6</div>
-    <!-- Row 1 -->
-    <div class="bg-gray-300 p-4 text-center">1</div>
-    <div class="bg-gray-300 p-4 text-center">2</div>
-    <div class="bg-gray-300 p-4 text-center">3</div>
-    <div class="bg-gray-300 p-4 text-center">4</div>
-    <div class="bg-gray-300 p-4 text-center">5</div>
-    <div class="bg-gray-300 p-4 text-center">6</div>
-    <!-- Row 1 -->
-    <div class="bg-gray-300 p-4 text-center">1</div>
-    <div class="bg-gray-300 p-4 text-center">2</div>
-    <div class="bg-gray-300 p-4 text-center">3</div>
-    <div class="bg-gray-300 p-4 text-center">4</div>
-    <div class="bg-gray-300 p-4 text-center">5</div>
-    <div class="bg-gray-300 p-4 text-center">6</div>
+<div :if={@status} class="container mx-auto">
+  <%= @status |> inspect() %>
+  <div class="grid grid-cols-6 gap-4 mt-10">
+    <%= @status |> Enum.with_index |> Enum.map(fn({row, row_index}) -> %>
+      <!-- EachRow -->
+      <%= row |> Enum.with_index |> Enum.map(fn({column, column_index}) -> %>
+        <div class="bg-gray-300 p-4 text-center">
+          <%= @status |> Enum.at(row_index) |> Enum.at(column_index) || "" %>
+        </div>
+      <% end) %>
+    <% end) %>
   </div>
 </div>

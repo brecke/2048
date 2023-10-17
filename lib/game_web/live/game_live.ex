@@ -1,73 +1,96 @@
 defmodule GameWeb.GameLive do
+  alias GameWeb.MatrixUtils
   use GameWeb, :live_view
 
+  alias MatrixReloaded.Matrix
   require IEx
-
-  defp generate_array(rows, columns)
-       when is_integer(rows) and is_integer(columns) and rows > 0 and columns > 0 do
-    # Create a row filled with nil values
-    row = :lists.duplicate(columns, nil)
-
-    # Create a list of rows to form the 2D array
-    array = :lists.duplicate(rows, row)
-
-    array
-  end
-
-  # Update the value at a specific (x, y) coordinate in a 2D array
-  def update_element(array, x, y, new_value) when is_list(array) and x >= 0 and y >= 0 do
-    update_element(array, x, y, new_value, 0)
-  end
-
-  # Helper function with row index
-  defp update_element([], _, _, _, _), do: []
-
-  defp update_element([row | rest], x, y, new_value, row_index) when row_index == y do
-    [update_row(row, x, new_value) | rest]
-  end
-
-  defp update_element([row | rest], x, y, new_value, row_index) do
-    [row | update_element(rest, x, y, new_value, row_index + 1)]
-  end
-
-  # Helper function to update an element in a row
-  defp update_row([], _, _), do: []
-
-  defp update_row([_ | rest], 0, new_value), do: [new_value | rest]
-
-  defp update_row([cell | rest], x, new_value) when x > 0 do
-    [cell | update_row(rest, x - 1, new_value)]
-  end
 
   def handle_event("handle_key_press", %{"key" => "ArrowLeft"}, socket) do
     IO.inspect("left!")
 
+    socket = socket |> uncover_new_tile()
     {:noreply, socket}
   end
 
   def handle_event("handle_key_press", %{"key" => "ArrowRight"}, socket) do
     IO.inspect("right!")
 
+    socket = socket |> uncover_new_tile()
     {:noreply, socket}
   end
 
   def handle_event("handle_key_press", %{"key" => "ArrowUp"}, socket) do
     IO.inspect("up!")
 
+    socket = socket |> uncover_new_tile()
     {:noreply, socket}
   end
 
   def handle_event("handle_key_press", %{"key" => "ArrowDown"}, socket) do
     IO.inspect("down!")
 
+    socket = socket |> uncover_new_tile()
     {:noreply, socket}
   end
 
+  def handle_event("handle_key_press", _params, socket) do
+    {:noreply, socket}
+  end
+
+  defp find_nil_coordinates(matrix) do
+    for {row, row_index} <- Enum.with_index(matrix),
+        {value, column_index} <- Enum.with_index(row),
+        value == nil,
+        do: {row_index, column_index}
+  end
+
+  # Get a random nil coordinate
+  def random_nil_coordinate(matrix) when is_list(matrix) do
+    nil_coordinates = find_nil_coordinates(matrix)
+
+    # debug
+    IO.puts("Found #{nil_coordinates |> length()} nil coordinates")
+
+    if length(nil_coordinates) > 0 do
+      Enum.random(nil_coordinates)
+    else
+      nil
+    end
+  end
+
+  defp fill_spot(matrix, x, y) do
+    # matrix |> IO.inspect()
+    # {:ok, result} = Matrix.get_element(matrix, {x, y})
+    # IO.puts("Previous: (#{x},#{y}) => #{result || "null"}")
+
+    # {:ok, new_matrix} = 
+    matrix |> Matrix.update_element(1, {x, y})
+
+    # new_matrix |> IO.inspect()
+    # {:ok, result} = Matrix.get_element(new_matrix, {x, y})
+    # IO.puts("Current: (#{x},#{y}) => #{result}")
+  end
+
+  defp uncover_new_tile(socket) do
+    %{status: matrix} = socket.assigns
+
+    case random_nil_coordinate(matrix) do
+      nil ->
+        socket |> assign(message: "LOST the GAME")
+
+      # show alert maybe?
+      {row, col} ->
+        {:ok, new_matrix} = fill_spot(matrix, row, col)
+        socket |> assign(status: new_matrix)
+    end
+  end
+
   def mount(_params, _session, socket) do
-    status = generate_array(6, 6)
-    x = :rand.uniform(5)
-    y = :rand.uniform(5)
-    status = status |> update_element(x, y, 2)
+    matrix = Matrix.new(6, nil)
+    x = :rand.uniform(6) - 1
+    y = :rand.uniform(6) - 1
+
+    {:ok, status} = matrix |> Result.and_then(&Matrix.update_element(&1, 2, {x, y}))
 
     status |> IO.inspect()
 
@@ -82,6 +105,6 @@ defmodule GameWeb.GameLive do
           |> assign(loading: true, status: nil)
       end
 
-    {:ok, socket}
+    {:ok, socket |> assign(message: nil)}
   end
 end

@@ -1,3 +1,6 @@
+<div :if={@message} class="container mx-auto">
+  Sorry you've lost the game, reload window to play again!
+</div>
 <div :if={@status} phx-window-keydown="handle_key_press" class="container mx-auto">
   <div class="grid grid-cols-6 gap-4 mt-10">
     <%= @status |> Enum.with_index |> Enum.map(fn({row, row_index}) -> %>

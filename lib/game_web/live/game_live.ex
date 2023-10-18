@@ -20,7 +20,12 @@ defmodule GameWeb.GameLive do
         acc + cols_sum
       end)
 
-    IO.puts("score: #{score}")
+    socket =
+      cond do
+        score == 2048 -> socket |> assign(message: "You have won the match!!")
+        score > 2048 -> socket |> assign(message: "Ooops! You have gone over 2048 :(")
+        true -> socket
+      end
 
     socket |> assign(score: score)
   end

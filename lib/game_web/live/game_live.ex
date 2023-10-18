@@ -45,8 +45,6 @@ defmodule GameWeb.GameLive do
   defp move_left(socket) do
     %{status: matrix} = socket.assigns
 
-    # IEx.pry()
-
     new_matrix =
       matrix
       |> Enum.with_index()
@@ -59,8 +57,39 @@ defmodule GameWeb.GameLive do
           )
 
         {:ok, matrix} = result
-        {:ok, new_column} = Matrix.get_row(matrix, row_index)
-        new_column
+        {:ok, new_row} = Matrix.get_row(matrix, row_index)
+        new_row
+      end)
+
+    new_matrix |> IO.inspect()
+
+    socket |> assign(status: new_matrix)
+  end
+
+  defp move_up(socket) do
+    %{status: matrix} = socket.assigns
+
+    new_matrix =
+      List.duplicate(nil, 6)
+      |> Enum.with_index()
+      |> Enum.reduce([[0], [0], [0], [0], [0], [0]], fn {_, col_index}, acc ->
+        {:ok, each_col} = Matrix.get_col(matrix, col_index)
+
+        slided_col =
+          each_col
+          |> List.flatten()
+          |> Sliding.clear_left_padding()
+          |> Sliding.left_slide()
+          |> Enum.map(fn x -> [x] end)
+
+        case col_index do
+          0 ->
+            slided_col
+
+          _ ->
+            {:ok, result} = Matrix.concat_row(acc, slided_col)
+            result
+        end
       end)
 
     new_matrix |> IO.inspect()
@@ -85,7 +114,7 @@ defmodule GameWeb.GameLive do
   def handle_event("handle_key_press", %{"key" => "ArrowUp"}, socket) do
     IO.inspect("up!")
 
-    socket = socket |> uncover_new_tile() |> has_won?()
+    socket = socket |> move_up() |> uncover_new_tile() |> has_won?()
     {:noreply, socket}
   end
 

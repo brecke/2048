@@ -19,6 +19,35 @@ defmodule GameWeb.CoreComponents do
   alias Phoenix.LiveView.JS
   import GameWeb.Gettext
 
+  def hide_zeros(0), do: ""
+  def hide_zeros(tile), do: tile
+
+  def get_background_color(matrix, row_index, column_index) do
+    value =
+      matrix
+      |> Enum.at(row_index)
+      |> Enum.at(column_index)
+
+    case value do
+      0 -> "background-color: rgb(180 161 144)"
+      1 -> "background-color: rgb(239 233 206)"
+      2 -> "background-color: rgb(222 202 184)"
+      4 -> "background-color: rgb(224 202 162)"
+      8 -> "background-color: rgb(237 145 78)"
+      16 -> "background-color: rgb(242 112 59)"
+      32 -> "background-color: rgb(244 81 53)"
+      64 -> "background-color: rgb(244 55 32)"
+      128 -> "background-color: rgb(228 188 75)"
+      # 
+      256 -> "background-color: rgb(180 161 144)"
+      #
+      512 -> "background-color: rgb(180 161 144)"
+      #
+      1024 -> "background-color: rgb(180 161 144)"
+      _ -> "background-color: rgb(180 161 144)"
+    end
+  end
+
   @doc """
   Renders a modal.
 

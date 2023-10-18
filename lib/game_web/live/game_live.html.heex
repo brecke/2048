@@ -6,17 +6,15 @@
     <%= @status |> Enum.with_index |> Enum.map(fn({row, row_index}) -> %>
       <!-- EachRow -->
       <%= row |> Enum.with_index |> Enum.map(fn({column, column_index}) -> %>
-        <div class="bg-gray-300 p-4 text-center">
+        <p
+          style={"color: rgb(172 111 70); #{get_background_color(@status, row_index, column_index)}"}
+          class="p-4 font-semibold text-lg text-center"
+        >
           <%= @status
           |> Enum.at(row_index)
           |> Enum.at(column_index)
-          |> then(fn each ->
-            case each do
-              0 -> ""
-              _ -> each
-            end
-          end) %>
-        </div>
+          |> then(&hide_zeros/1) %>
+        </p>
       <% end) %>
     <% end) %>
   </div>

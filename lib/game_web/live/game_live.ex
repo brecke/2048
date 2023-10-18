@@ -5,6 +5,22 @@ defmodule GameWeb.GameLive do
   alias MatrixReloaded.Matrix
   require IEx
 
+  defp has_won?(socket) do
+    %{status: matrix} = socket.assigns
+
+    victorious_coords =
+      for {row, row_index} <- Enum.with_index(matrix),
+          {value, column_index} <- Enum.with_index(row),
+          value == 2048,
+          do: {row_index, column_index}
+
+    if length(victorious_coords) > 0 do
+      socket |> assign(message: "You have won the match!!")
+    else
+      socket
+    end
+  end
+
   defp recalculate_score(socket) do
     %{status: matrix} = socket.assigns
 
@@ -33,28 +49,28 @@ defmodule GameWeb.GameLive do
   def handle_event("handle_key_press", %{"key" => "ArrowLeft"}, socket) do
     IO.inspect("left!")
 
-    socket = socket |> uncover_new_tile() |> recalculate_score()
+    socket = socket |> uncover_new_tile() |> has_won?()
     {:noreply, socket}
   end
 
   def handle_event("handle_key_press", %{"key" => "ArrowRight"}, socket) do
     IO.inspect("right!")
 
-    socket = socket |> uncover_new_tile() |> recalculate_score()
+    socket = socket |> uncover_new_tile() |> has_won?()
     {:noreply, socket}
   end
 
   def handle_event("handle_key_press", %{"key" => "ArrowUp"}, socket) do
     IO.inspect("up!")
 
-    socket = socket |> uncover_new_tile() |> recalculate_score()
+    socket = socket |> uncover_new_tile() |> has_won?()
     {:noreply, socket}
   end
 
   def handle_event("handle_key_press", %{"key" => "ArrowDown"}, socket) do
     IO.inspect("down!")
 
-    socket = socket |> uncover_new_tile() |> recalculate_score()
+    socket = socket |> uncover_new_tile() |> has_won?()
     {:noreply, socket}
   end
 
@@ -124,11 +140,10 @@ defmodule GameWeb.GameLive do
         true ->
           socket
           |> assign(loading: false, status: status)
-          |> recalculate_score()
 
         false ->
           socket
-          |> assign(loading: true, status: nil, score: 0)
+          |> assign(loading: true, status: nil)
       end
 
     {:ok, socket |> assign(message: nil)}

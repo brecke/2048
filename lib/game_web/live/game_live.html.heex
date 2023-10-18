@@ -7,7 +7,15 @@
       <!-- EachRow -->
       <%= row |> Enum.with_index |> Enum.map(fn({column, column_index}) -> %>
         <div class="bg-gray-300 p-4 text-center">
-          <%= @status |> Enum.at(row_index) |> Enum.at(column_index) || "" %>
+          <%= @status
+          |> Enum.at(row_index)
+          |> Enum.at(column_index)
+          |> then(fn each ->
+            case each do
+              0 -> ""
+              _ -> each
+            end
+          end) %>
         </div>
       <% end) %>
     <% end) %>

@@ -1,7 +1,7 @@
 defmodule GameWeb.GameLive do
-  alias GameWeb.MatrixUtils
   use GameWeb, :live_view
 
+  alias GameWeb.Sliding
   alias MatrixReloaded.Matrix
   require IEx
 
@@ -21,35 +21,57 @@ defmodule GameWeb.GameLive do
     end
   end
 
-  defp recalculate_score(socket) do
+  """
+      rest
+      |> List.insert_at(length(rest), nil)
+      |> Enum.with_index()
+      |> Enum.reduce([], fn {each, index}, acc ->
+        previous = Enum.at(rest, index - 1, 0)
+
+        case index > 0 && each == previous do
+          true -> acc ++ [nil]
+          false -> acc ++ [each]
+        end
+
+        next = Enum.at(rest, index + 1, 0)
+
+        case index < length(rest) && each == next do
+          true -> acc ++ [each + next]
+          false -> acc ++ [each]
+        end
+      end)
+  """
+
+  defp move_left(socket) do
     %{status: matrix} = socket.assigns
 
-    default_to_zero = fn each -> each || 0 end
+    # IEx.pry()
 
-    score =
-      Enum.reduce(matrix, 0, fn each_row, acc ->
-        cols_sum =
-          Enum.reduce(each_row, 0, fn each_value, acc ->
-            acc + default_to_zero.(each_value)
-          end)
+    new_matrix =
+      matrix
+      |> Enum.with_index()
+      |> Enum.map(fn {each_row, row_index} ->
+        result =
+          Matrix.update_row(
+            matrix,
+            each_row |> Sliding.clear_left_padding() |> Sliding.left_slide(),
+            {row_index, 0}
+          )
 
-        acc + cols_sum
+        {:ok, matrix} = result
+        {:ok, new_column} = Matrix.get_row(matrix, row_index)
+        new_column
       end)
 
-    socket =
-      cond do
-        score == 2048 -> socket |> assign(message: "You have won the match!!")
-        score > 2048 -> socket |> assign(message: "Ooops! You have gone over 2048 :(")
-        true -> socket
-      end
+    new_matrix |> IO.inspect()
 
-    socket |> assign(score: score)
+    socket |> assign(status: new_matrix)
   end
 
   def handle_event("handle_key_press", %{"key" => "ArrowLeft"}, socket) do
     IO.inspect("left!")
 
-    socket = socket |> uncover_new_tile() |> has_won?()
+    socket = socket |> move_left() |> uncover_new_tile() |> has_won?()
     {:noreply, socket}
   end
 
@@ -81,7 +103,7 @@ defmodule GameWeb.GameLive do
   defp find_nil_coordinates(matrix) do
     for {row, row_index} <- Enum.with_index(matrix),
         {value, column_index} <- Enum.with_index(row),
-        value == nil,
+        value == 0,
         do: {row_index, column_index}
   end
 
@@ -99,18 +121,7 @@ defmodule GameWeb.GameLive do
     end
   end
 
-  defp fill_spot(matrix, x, y) do
-    # matrix |> IO.inspect()
-    # {:ok, result} = Matrix.get_element(matrix, {x, y})
-    # IO.puts("Previous: (#{x},#{y}) => #{result || "null"}")
-
-    # {:ok, new_matrix} = 
-    matrix |> Matrix.update_element(1, {x, y})
-
-    # new_matrix |> IO.inspect()
-    # {:ok, result} = Matrix.get_element(new_matrix, {x, y})
-    # IO.puts("Current: (#{x},#{y}) => #{result}")
-  end
+  defp fill_spot(matrix, x, y), do: matrix |> Matrix.update_element(1, {x, y})
 
   defp uncover_new_tile(socket) do
     %{status: matrix} = socket.assigns
@@ -119,7 +130,6 @@ defmodule GameWeb.GameLive do
       nil ->
         socket |> assign(message: "Sorry you've lost the game, reload window to play again!")
 
-      # show alert maybe?
       {row, col} ->
         {:ok, new_matrix} = fill_spot(matrix, row, col)
         socket |> assign(status: new_matrix)
@@ -127,7 +137,7 @@ defmodule GameWeb.GameLive do
   end
 
   def mount(_params, _session, socket) do
-    matrix = Matrix.new(6, nil)
+    matrix = Matrix.new(6, 0)
     x = :rand.uniform(6) - 1
     y = :rand.uniform(6) - 1
 

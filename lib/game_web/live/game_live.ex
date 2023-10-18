@@ -5,31 +5,51 @@ defmodule GameWeb.GameLive do
   alias MatrixReloaded.Matrix
   require IEx
 
+  defp recalculate_score(socket) do
+    %{status: matrix} = socket.assigns
+
+    default_to_zero = fn each -> each || 0 end
+
+    score =
+      Enum.reduce(matrix, 0, fn each_row, acc ->
+        cols_sum =
+          Enum.reduce(each_row, 0, fn each_value, acc ->
+            acc + default_to_zero.(each_value)
+          end)
+
+        acc + cols_sum
+      end)
+
+    IO.puts("score: #{score}")
+
+    socket |> assign(score: score)
+  end
+
   def handle_event("handle_key_press", %{"key" => "ArrowLeft"}, socket) do
     IO.inspect("left!")
 
-    socket = socket |> uncover_new_tile()
+    socket = socket |> uncover_new_tile() |> recalculate_score()
     {:noreply, socket}
   end
 
   def handle_event("handle_key_press", %{"key" => "ArrowRight"}, socket) do
     IO.inspect("right!")
 
-    socket = socket |> uncover_new_tile()
+    socket = socket |> uncover_new_tile() |> recalculate_score()
     {:noreply, socket}
   end
 
   def handle_event("handle_key_press", %{"key" => "ArrowUp"}, socket) do
     IO.inspect("up!")
 
-    socket = socket |> uncover_new_tile()
+    socket = socket |> uncover_new_tile() |> recalculate_score()
     {:noreply, socket}
   end
 
   def handle_event("handle_key_press", %{"key" => "ArrowDown"}, socket) do
     IO.inspect("down!")
 
-    socket = socket |> uncover_new_tile()
+    socket = socket |> uncover_new_tile() |> recalculate_score()
     {:noreply, socket}
   end
 
@@ -76,7 +96,7 @@ defmodule GameWeb.GameLive do
 
     case random_nil_coordinate(matrix) do
       nil ->
-        socket |> assign(message: "LOST the GAME")
+        socket |> assign(message: "Sorry you've lost the game, reload window to play again!")
 
       # show alert maybe?
       {row, col} ->
@@ -99,10 +119,11 @@ defmodule GameWeb.GameLive do
         true ->
           socket
           |> assign(loading: false, status: status)
+          |> recalculate_score()
 
         false ->
           socket
-          |> assign(loading: true, status: nil)
+          |> assign(loading: true, status: nil, score: 0)
       end
 
     {:ok, socket |> assign(message: nil)}

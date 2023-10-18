@@ -1,5 +1,8 @@
 <div :if={@message} class="container mx-auto">
-  Sorry you've lost the game, reload window to play again!
+  <%= @message %>
+</div>
+<div :if={@score} class="container mx-auto">
+  Current score: <%= @score %>
 </div>
 <div :if={@status} phx-window-keydown="handle_key_press" class="container mx-auto">
   <div class="grid grid-cols-6 gap-4 mt-10">

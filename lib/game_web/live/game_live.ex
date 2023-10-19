@@ -1,4 +1,5 @@
 defmodule GameWeb.GameLive do
+  alias GameWeb.MatrixUtils
   use GameWeb, :live_view
 
   alias GameWeb.Sliding
@@ -8,12 +9,7 @@ defmodule GameWeb.GameLive do
   defp has_won?(socket) do
     %{status: matrix} = socket.assigns
 
-    # TODO: move to matrix utils
-    victorious_coords =
-      for {row, row_index} <- Enum.with_index(matrix),
-          {value, column_index} <- Enum.with_index(row),
-          value == 2048,
-          do: {row_index, column_index}
+    victorious_coords = matrix |> MatrixUtils.find_victorious_coords()
 
     if length(victorious_coords) > 0 do
       socket |> assign(message: "You have won the match!!")
@@ -66,37 +62,15 @@ defmodule GameWeb.GameLive do
     {:noreply, socket}
   end
 
-  # TODO: move to matrix utils
-  defp find_nil_coordinates(matrix) do
-    for {row, row_index} <- Enum.with_index(matrix),
-        {value, column_index} <- Enum.with_index(row),
-        value == 0,
-        do: {row_index, column_index}
-  end
-
-  # TODO: move to matrix utils
-  def random_nil_coordinate(matrix) when is_list(matrix) do
-    nil_coordinates = find_nil_coordinates(matrix)
-
-    if length(nil_coordinates) > 0 do
-      Enum.random(nil_coordinates)
-    else
-      nil
-    end
-  end
-
-  # TODO: move to matrix utils
-  defp fill_spot(matrix, x, y), do: matrix |> Matrix.update_element(1, {x, y})
-
   defp uncover_new_tile(socket) do
     %{status: matrix} = socket.assigns
 
-    case random_nil_coordinate(matrix) do
+    case MatrixUtils.random_nil_coordinate(matrix) do
       nil ->
         socket |> assign(message: "Sorry you've lost the game, reload window to play again!")
 
       {row, col} ->
-        {:ok, new_matrix} = fill_spot(matrix, row, col)
+        {:ok, new_matrix} = MatrixUtils.fill_spot(matrix, row, col)
         socket |> assign(status: new_matrix)
     end
   end

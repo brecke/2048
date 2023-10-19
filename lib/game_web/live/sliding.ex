@@ -91,19 +91,15 @@ defmodule GameWeb.Sliding do
     Enum.concat(list, List.duplicate(0, up_to_size - length(list)))
   end
 
-  # defp pad_left_with_zeros(list, up_to_size) do
-  #   List.duplicate(0, up_to_size - length(list)) ++ list
-  # end
+  defp shift_left(row, size), do: row |> shift_row() |> pad_right_with_zeros(size)
 
-  def shift_left(row, size), do: row |> shift_row() |> pad_right_with_zeros(size)
-
-  def shift_right(row, size),
+  defp shift_right(row, size),
     do: row |> Enum.reverse() |> shift_left(size) |> Enum.reverse()
 
-  def shift_row([], acc), do: acc
-  def shift_row(row, acc) when length(row) == 1, do: acc ++ row
+  defp shift_row([], acc), do: acc
+  defp shift_row(row, acc) when length(row) == 1, do: acc ++ row
 
-  def shift_row(row, acc \\ []) when length(row) >= 2 do
+  defp shift_row(row, acc \\ []) when length(row) >= 2 do
     heads = row |> Enum.take(2)
     rest = row |> Enum.drop(2)
 

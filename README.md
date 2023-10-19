@@ -1,18 +1,14 @@
-# Game
+# I wanna play 2048
 
-To start your Phoenix server:
+I know. Just do this:
 
   * Run `mix setup` to install and setup dependencies
   * Start Phoenix endpoint with `mix phx.server` or inside IEx with `iex -S mix phx.server`
 
 Now you can visit [`localhost:4000`](http://localhost:4000) from your browser.
 
-Ready to run in production? Please [check our deployment guides](https://hexdocs.pm/phoenix/deployment.html).
+The default grid size is 6 but you can change it on the URL like `localhost:4000?size=5`. Should work with other values but the layout might not cope :)
 
-## Learn more
+# I'm a nerd
 
-  * Official website: https://www.phoenixframework.org/
-  * Guides: https://hexdocs.pm/phoenix/overview.html
-  * Docs: https://hexdocs.pm/phoenix
-  * Forum: https://elixirforum.com/c/phoenix-forum
-  * Source: https://github.com/phoenixframework/phoenix
+No worries. You can run some tests and build some dopamine with `mix test`. The coverage ain't high but it covers the most important part of the game: sliding tiles.

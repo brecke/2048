@@ -8,7 +8,7 @@
       <%= row |> Enum.with_index |> Enum.map(fn({column, column_index}) -> %>
         <p
           style={"color: rgb(172 111 70); #{get_background_color(@status, row_index, column_index)}"}
-          class="p-4 font-semibold text-lg text-center"
+          class="h-24 w-24 font-semibold text-lg text-center pt-8"
         >
           <%= @status
           |> Enum.at(row_index)

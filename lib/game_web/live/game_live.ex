@@ -23,50 +23,41 @@ defmodule GameWeb.GameLive do
 
   defp move_left(socket) do
     %{status: matrix} = socket.assigns
+    socket |> assign(status: matrix |> Sliding.slide("left"))
+  end
 
-    new_matrix = matrix |> Sliding.slide_left()
-    # debug
-    new_matrix |> IO.inspect()
+  defp move_right(socket) do
+    %{status: matrix} = socket.assigns
+    socket |> assign(status: matrix |> Sliding.slide("right"))
+  end
 
-    socket |> assign(status: new_matrix)
+  defp move_down(socket) do
+    %{status: matrix} = socket.assigns
+    socket |> assign(status: matrix |> Sliding.slide("down"))
   end
 
   defp move_up(socket) do
     %{status: matrix} = socket.assigns
-
-    new_matrix = matrix |> Sliding.slide_up()
-
-    # debug
-    new_matrix |> IO.inspect()
-
-    socket |> assign(status: new_matrix)
+    socket |> assign(status: matrix |> Sliding.slide("up"))
   end
 
   def handle_event("handle_key_press", %{"key" => "ArrowLeft"}, socket) do
-    IO.inspect("left!")
-
     socket = socket |> move_left() |> uncover_new_tile() |> has_won?()
     {:noreply, socket}
   end
 
   def handle_event("handle_key_press", %{"key" => "ArrowRight"}, socket) do
-    IO.inspect("right!")
-
-    socket = socket |> uncover_new_tile() |> has_won?()
+    socket = socket |> move_right() |> uncover_new_tile() |> has_won?()
     {:noreply, socket}
   end
 
   def handle_event("handle_key_press", %{"key" => "ArrowUp"}, socket) do
-    IO.inspect("up!")
-
     socket = socket |> move_up() |> uncover_new_tile() |> has_won?()
     {:noreply, socket}
   end
 
   def handle_event("handle_key_press", %{"key" => "ArrowDown"}, socket) do
-    IO.inspect("down!")
-
-    socket = socket |> uncover_new_tile() |> has_won?()
+    socket = socket |> move_down() |> uncover_new_tile() |> has_won?()
     {:noreply, socket}
   end
 
@@ -74,6 +65,7 @@ defmodule GameWeb.GameLive do
     {:noreply, socket}
   end
 
+  # TODO: move to matrix utils
   defp find_nil_coordinates(matrix) do
     for {row, row_index} <- Enum.with_index(matrix),
         {value, column_index} <- Enum.with_index(row),
@@ -81,7 +73,7 @@ defmodule GameWeb.GameLive do
         do: {row_index, column_index}
   end
 
-  # Get a random nil coordinate
+  # TODO: move to matrix utils
   def random_nil_coordinate(matrix) when is_list(matrix) do
     nil_coordinates = find_nil_coordinates(matrix)
 

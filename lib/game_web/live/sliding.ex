@@ -6,15 +6,44 @@ defmodule GameWeb.Sliding do
   Single API for the sliding module
   """
   def slide(matrix, direction) do
+    size = matrix |> length()
+
     case direction do
-      "left" -> matrix |> slide_sideways(&shift_left/1, &clear_left_padding/1)
-      "right" -> matrix |> slide_sideways(&shift_right/1, &clear_right_padding/1)
-      "up" -> matrix |> slide_vertically(&shift_left/1, &clear_left_padding/1)
-      "down" -> matrix |> slide_vertically(&shift_right/1, &clear_right_padding/1)
+      "left" ->
+        matrix
+        |> slide_sideways(
+          &shift_left(&1, size),
+          &clear_left_padding/1
+        )
+
+      "right" ->
+        matrix
+        |> slide_sideways(
+          &shift_right(&1, size),
+          &clear_right_padding/1
+        )
+
+      "up" ->
+        matrix
+        |> slide_vertically(
+          &shift_left(&1, size),
+          &clear_left_padding/1
+        )
+
+      "down" ->
+        matrix
+        |> slide_vertically(
+          &shift_right(&1, size),
+          &clear_right_padding/1
+        )
     end
   end
 
-  defp remove_zeros(row), do: row |> Enum.reject(&(&1 == 0))
+  # defp remove_zeros(row), do: row |> Enum.reject(&(&1 == 0))
+
+  defp to_array(x), do: [x]
+
+  defp generate_empty_column(size), do: List.duplicate(0, size) |> Enum.map(&to_array/1)
 
   defp slide_sideways(matrix, shift_to_fn, clear_padding_fn) do
     matrix
@@ -22,7 +51,9 @@ defmodule GameWeb.Sliding do
     |> Enum.map(fn {each_row, row_index} ->
       case Matrix.update_row(
              matrix,
-             each_row |> clear_padding_fn.() |> shift_to_fn.(),
+             each_row
+             |> clear_padding_fn.()
+             |> shift_to_fn.(),
              {row_index, 0}
            )
            |> Result.and_then(&Matrix.get_row(&1, row_index)) do
@@ -33,9 +64,9 @@ defmodule GameWeb.Sliding do
   end
 
   defp slide_vertically(matrix, shift_to_fn, clear_padding_fn) do
-    List.duplicate(nil, 6)
+    List.duplicate(nil, length(matrix))
     |> Enum.with_index()
-    |> Enum.reduce([[0], [0], [0], [0], [0], [0]], fn {_, col_index}, acc ->
+    |> Enum.reduce(generate_empty_column(length(matrix)), fn {_, col_index}, acc ->
       {:ok, each_col} = Matrix.get_col(matrix, col_index)
 
       slided_col =
@@ -43,7 +74,7 @@ defmodule GameWeb.Sliding do
         |> List.flatten()
         |> clear_padding_fn.()
         |> shift_to_fn.()
-        |> Enum.map(fn x -> [x] end)
+        |> Enum.map(&to_array/1)
 
       case col_index do
         0 ->
@@ -56,31 +87,37 @@ defmodule GameWeb.Sliding do
     end)
   end
 
-  defp pad_right_with_zeros(list) do
-    desired_length = 6
-    Enum.concat(list, List.duplicate(0, desired_length - length(list)))
+  defp pad_right_with_zeros(list, up_to_size) do
+    Enum.concat(list, List.duplicate(0, up_to_size - length(list)))
   end
 
-  def shift_right(row), do: row |> Enum.reverse() |> shift_left() |> Enum.reverse()
+  # defp pad_left_with_zeros(list, up_to_size) do
+  #   List.duplicate(0, up_to_size - length(list)) ++ list
+  # end
 
-  def shift_left([], acc), do: acc |> pad_right_with_zeros()
-  def shift_left(row, acc) when length(row) == 1, do: (acc ++ row) |> pad_right_with_zeros()
+  def shift_left(row, size), do: row |> shift_row() |> pad_right_with_zeros(size)
 
-  def shift_left(row, acc \\ []) when length(row) >= 2 do
+  def shift_right(row, size),
+    do: row |> Enum.reverse() |> shift_left(size) |> Enum.reverse()
+
+  def shift_row([], acc), do: acc
+  def shift_row(row, acc) when length(row) == 1, do: acc ++ row
+
+  def shift_row(row, acc \\ []) when length(row) >= 2 do
     heads = row |> Enum.take(2)
     rest = row |> Enum.drop(2)
 
     case heads do
       [0, tail] ->
-        shift_left([tail] ++ rest, acc)
+        shift_row([tail] ++ rest, acc)
 
       [head, 0] ->
-        shift_left([head] ++ rest, acc)
+        shift_row([head] ++ rest, acc)
 
       [head, tail] ->
         cond do
-          head > 0 && head == tail -> shift_left(rest, acc ++ [head + tail])
-          true -> shift_left([tail] ++ rest, acc ++ [head])
+          head > 0 && head == tail -> shift_row(rest, acc ++ [head + tail])
+          true -> shift_row([tail] ++ rest, acc ++ [head])
         end
     end
   end

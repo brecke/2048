@@ -1,20 +1,30 @@
+<div :if={@loading} class="container mx-auto">
+  Loading...
+</div>
 <div :if={@message} class="container mx-auto">
   <%= @message %>
 </div>
-<div :if={@status} phx-window-keydown="handle_key_press" class="container mx-auto">
-  <div class="grid grid-cols-6 gap-4 mt-10">
+<div :if={@status} class="container mx-auto">
+  <p>
+    Grid size: <%= @size %>
+  </p>
+  <div
+    :if={@size}
+    phx-window-keydown="handle_key_press"
+    class={"grid grid-cols-#{@size} gap-2 mt-10"}
+  >
     <%= @status |> Enum.with_index |> Enum.map(fn({row, row_index}) -> %>
       <!-- EachRow -->
-      <%= row |> Enum.with_index |> Enum.map(fn({column, column_index}) -> %>
-        <p
+      <%= row |> Enum.with_index |> Enum.map(fn({_column, column_index}) -> %>
+        <div
+          class="rounded h-24 font-semibold text-4xl text-center p-5"
           style={"color: rgb(172 111 70); #{get_background_color(@status, row_index, column_index)}"}
-          class="h-24 w-24 font-semibold text-lg text-center pt-8"
         >
           <%= @status
           |> Enum.at(row_index)
           |> Enum.at(column_index)
           |> then(&hide_zeros/1) %>
-        </p>
+        </div>
       <% end) %>
     <% end) %>
   </div>

@@ -8,6 +8,7 @@ defmodule GameWeb.GameLive do
   defp has_won?(socket) do
     %{status: matrix} = socket.assigns
 
+    # TODO: move to matrix utils
     victorious_coords =
       for {row, row_index} <- Enum.with_index(matrix),
           {value, column_index} <- Enum.with_index(row),
@@ -100,22 +101,23 @@ defmodule GameWeb.GameLive do
     end
   end
 
-  def mount(_params, _session, socket) do
-    matrix = Matrix.new(6, 0)
-    x = :rand.uniform(6) - 1
-    y = :rand.uniform(6) - 1
-
-    {:ok, status} = matrix |> Result.and_then(&Matrix.update_element(&1, 2, {x, y}))
+  def mount(params, _session, socket) do
+    size = params |> Map.get("size", "6") |> String.to_integer()
 
     socket =
       case connected?(socket) do
         true ->
+          matrix = Matrix.new(size, 0)
+          x = :rand.uniform(size) - 1
+          y = :rand.uniform(size) - 1
+          {:ok, new_matrix} = matrix |> Result.and_then(&Matrix.update_element(&1, 2, {x, y}))
+
           socket
-          |> assign(loading: false, status: status)
+          |> assign(loading: false, status: new_matrix, size: new_matrix |> length())
 
         false ->
           socket
-          |> assign(loading: true, status: nil)
+          |> assign(loading: true, status: nil, size: size)
       end
 
     {:ok, socket |> assign(message: nil)}

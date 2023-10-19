@@ -7,22 +7,22 @@ defmodule GameWeb.Sliding do
   """
   def slide(matrix, direction) do
     case direction do
-      "left" -> matrix |> slide_sideways(&shift_left/1, &clear_left_padding/1)
-      "right" -> matrix |> slide_sideways(&shift_right/1, &clear_right_padding/1)
-      "up" -> matrix |> slide_vertically(&shift_left/1, &clear_left_padding/1)
-      "down" -> matrix |> slide_vertically(&shift_right/1, &clear_right_padding/1)
+      "left" -> matrix |> slide_sideways(&shift_left/1)
+      "right" -> matrix |> slide_sideways(&shift_right/1)
+      "up" -> matrix |> slide_vertically(&shift_left/1)
+      "down" -> matrix |> slide_vertically(&shift_right/1)
     end
   end
 
   defp remove_zeros(row), do: row |> Enum.reject(&(&1 == 0))
 
-  defp slide_sideways(matrix, shift_to_fn, clear_padding_fn) do
+  defp slide_sideways(matrix, shift_to_fn) do
     matrix
     |> Enum.with_index()
     |> Enum.map(fn {each_row, row_index} ->
       case Matrix.update_row(
              matrix,
-             each_row |> remove_zeros() |> clear_padding_fn.() |> shift_to_fn.(),
+             each_row |> remove_zeros() |> shift_to_fn.(),
              {row_index, 0}
            )
            |> Result.and_then(&Matrix.get_row(&1, row_index)) do
@@ -32,7 +32,7 @@ defmodule GameWeb.Sliding do
     end)
   end
 
-  defp slide_vertically(matrix, shift_to_fn, clear_padding_fn) do
+  defp slide_vertically(matrix, shift_to_fn) do
     List.duplicate(nil, 6)
     |> Enum.with_index()
     |> Enum.reduce([[0], [0], [0], [0], [0], [0]], fn {_, col_index}, acc ->
@@ -42,7 +42,6 @@ defmodule GameWeb.Sliding do
         each_col
         |> List.flatten()
         |> remove_zeros()
-        |> clear_padding_fn.()
         |> shift_to_fn.()
         |> Enum.map(fn x -> [x] end)
 
@@ -82,13 +81,4 @@ defmodule GameWeb.Sliding do
         end
     end
   end
-
-  defp clear_right_padding(row) do
-    row
-    |> Enum.reverse()
-    |> Enum.drop_while(&(&1 == 0))
-    |> Enum.reverse()
-  end
-
-  defp clear_left_padding(row), do: row |> Enum.drop_while(&(&1 == 0))
 end

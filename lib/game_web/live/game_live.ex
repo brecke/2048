@@ -21,46 +21,11 @@ defmodule GameWeb.GameLive do
     end
   end
 
-  """
-      rest
-      |> List.insert_at(length(rest), nil)
-      |> Enum.with_index()
-      |> Enum.reduce([], fn {each, index}, acc ->
-        previous = Enum.at(rest, index - 1, 0)
-
-        case index > 0 && each == previous do
-          true -> acc ++ [nil]
-          false -> acc ++ [each]
-        end
-
-        next = Enum.at(rest, index + 1, 0)
-
-        case index < length(rest) && each == next do
-          true -> acc ++ [each + next]
-          false -> acc ++ [each]
-        end
-      end)
-  """
-
   defp move_left(socket) do
     %{status: matrix} = socket.assigns
 
-    new_matrix =
-      matrix
-      |> Enum.with_index()
-      |> Enum.map(fn {each_row, row_index} ->
-        result =
-          Matrix.update_row(
-            matrix,
-            each_row |> Sliding.clear_left_padding() |> Sliding.left_slide(),
-            {row_index, 0}
-          )
-
-        {:ok, matrix} = result
-        {:ok, new_row} = Matrix.get_row(matrix, row_index)
-        new_row
-      end)
-
+    new_matrix = matrix |> Sliding.slide_left()
+    # debug
     new_matrix |> IO.inspect()
 
     socket |> assign(status: new_matrix)
@@ -69,29 +34,9 @@ defmodule GameWeb.GameLive do
   defp move_up(socket) do
     %{status: matrix} = socket.assigns
 
-    new_matrix =
-      List.duplicate(nil, 6)
-      |> Enum.with_index()
-      |> Enum.reduce([[0], [0], [0], [0], [0], [0]], fn {_, col_index}, acc ->
-        {:ok, each_col} = Matrix.get_col(matrix, col_index)
+    new_matrix = matrix |> Sliding.slide_up()
 
-        slided_col =
-          each_col
-          |> List.flatten()
-          |> Sliding.clear_left_padding()
-          |> Sliding.left_slide()
-          |> Enum.map(fn x -> [x] end)
-
-        case col_index do
-          0 ->
-            slided_col
-
-          _ ->
-            {:ok, result} = Matrix.concat_row(acc, slided_col)
-            result
-        end
-      end)
-
+    # debug
     new_matrix |> IO.inspect()
 
     socket |> assign(status: new_matrix)

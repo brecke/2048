@@ -77,9 +77,6 @@ defmodule GameWeb.GameLive do
   def random_nil_coordinate(matrix) when is_list(matrix) do
     nil_coordinates = find_nil_coordinates(matrix)
 
-    # debug
-    IO.puts("Found #{nil_coordinates |> length()} nil coordinates")
-
     if length(nil_coordinates) > 0 do
       Enum.random(nil_coordinates)
     else
@@ -87,6 +84,7 @@ defmodule GameWeb.GameLive do
     end
   end
 
+  # TODO: move to matrix utils
   defp fill_spot(matrix, x, y), do: matrix |> Matrix.update_element(1, {x, y})
 
   defp uncover_new_tile(socket) do
@@ -108,8 +106,6 @@ defmodule GameWeb.GameLive do
     y = :rand.uniform(6) - 1
 
     {:ok, status} = matrix |> Result.and_then(&Matrix.update_element(&1, 2, {x, y}))
-
-    status |> IO.inspect()
 
     socket =
       case connected?(socket) do

@@ -11,6 +11,7 @@ defmodule Game.Application do
       GameWeb.Telemetry,
       {DNSCluster, query: Application.get_env(:game, :dns_cluster_query) || :ignore},
       {Phoenix.PubSub, name: Game.PubSub},
+      GameWeb.Presence,
       # Start the Finch HTTP client for sending emails
       {Finch, name: Game.Finch},
       # Start a worker by calling: Game.Worker.start_link(arg)

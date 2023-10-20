@@ -19,6 +19,9 @@ defmodule GameWeb.CoreComponents do
   alias Phoenix.LiveView.JS
   import GameWeb.Gettext
 
+  def get_players_names(players), do: players |> Enum.map(&get_player_name/1) |> Enum.join(",")
+  def get_player_name({_, meta}), do: meta.metas |> hd() |> Map.get(:name)
+
   def hide_zeros(0), do: ""
   def hide_zeros(tile), do: tile
 

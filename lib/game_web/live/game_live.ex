@@ -1,8 +1,10 @@
 defmodule GameWeb.GameLive do
+  alias Phoenix.Presence
   alias Game.Play
   alias GameWeb.MatrixUtils
   use GameWeb, :live_view
 
+  alias GameWeb.Presence
   alias GameWeb.Sliding
   alias MatrixReloaded.Matrix
   require IEx
@@ -30,34 +32,44 @@ defmodule GameWeb.GameLive do
   end
 
   defp broadcast_play(socket) do
-    %{status: matrix, player: player, direction: direction} = socket.assigns
+    %{status: matrix, next_player: player, direction: direction} = socket.assigns
 
     Play.broadcast_play(%{
       direction: direction,
-      player: switch_player(player),
-      status: matrix
+      next_player: switch_player(player),
+      status: matrix,
+      players: Presence.list("users")
     })
 
     socket
   end
 
   defp handle_move(socket, direction) do
-    socket |> move(direction) |> uncover_new_tile() |> has_won?() |> broadcast_play()
+    %{current_user: current_user, next_player: next_player} = socket.assigns
+
+    # only accept key strokes from the next_player :)
+    case current_user == next_player do
+      true ->
+        socket |> move(direction) |> uncover_new_tile() |> has_won?() |> broadcast_play()
+
+      false ->
+        socket
+    end
   end
 
-  def handle_event("handle_key_press", %{"key" => "ArrowLeft"} = params, socket) do
+  def handle_event("handle_key_press", %{"key" => "ArrowLeft"}, socket) do
     {:noreply, socket |> handle_move(@left)}
   end
 
-  def handle_event("handle_key_press", %{"key" => "ArrowRight"} = params, socket) do
+  def handle_event("handle_key_press", %{"key" => "ArrowRight"}, socket) do
     {:noreply, socket |> handle_move(@right)}
   end
 
-  def handle_event("handle_key_press", %{"key" => "ArrowUp"} = params, socket) do
+  def handle_event("handle_key_press", %{"key" => "ArrowUp"}, socket) do
     {:noreply, socket |> handle_move(@up)}
   end
 
-  def handle_event("handle_key_press", %{"key" => "ArrowDown"} = params, socket) do
+  def handle_event("handle_key_press", %{"key" => "ArrowDown"}, socket) do
     {:noreply, socket |> handle_move(@down)}
   end
 
@@ -65,12 +77,19 @@ defmodule GameWeb.GameLive do
     {:noreply, socket}
   end
 
-  defp switch_player(player) do
-    case player do
-      "player1" -> "player2"
-      "player2" -> "player1"
-      _ -> "player1"
+  defp next_player(all_players, current_player) when is_list(all_players) do
+    index = all_players |> Enum.find_index(&(&1 == current_player))
+
+    case index == length(all_players) - 1 do
+      true -> all_players |> Enum.at(0)
+      _ -> all_players |> Enum.at(index + 1)
     end
+  end
+
+  defp switch_player(current_player) do
+    all_pids = Presence.list("users") |> Map.keys()
+
+    next_player(all_pids, current_player)
   end
 
   defp uncover_new_tile(socket) do
@@ -87,9 +106,9 @@ defmodule GameWeb.GameLive do
   end
 
   def handle_info({:just_played, play}, socket) do
-    %{status: matrix, player: player, direction: direction} = play
+    %{status: matrix, next_player: player, direction: direction, players: players} = play
 
-    socket = socket |> assign(status: matrix, player: player)
+    socket = socket |> assign(status: matrix, next_player: player, players: players)
 
     {:noreply, socket}
   end
@@ -97,14 +116,28 @@ defmodule GameWeb.GameLive do
   def mount(params, _session, socket) do
     size = params |> Map.get("size", "6") |> String.to_integer()
 
-    # two players only for now
-    player = "player1"
-
-    socket = socket |> assign(size: size, player: player)
+    socket = socket |> assign(size: size)
 
     socket =
       case connected?(socket) do
         true ->
+          # using pids to avoid authentication
+          uuid =
+            self()
+            |> :erlang.pid_to_list()
+            |> List.delete_at(0)
+            |> List.delete_at(-1)
+            |> to_string()
+
+          Presence.track(self(), "users", uuid, %{
+            name: "player#{uuid}"
+          })
+
+          all_players = Presence.list("users")
+
+          next_player =
+            all_players |> Map.keys() |> hd()
+
           Play.subscribe()
           matrix = Matrix.new(size, 0)
           x = :rand.uniform(size) - 1
@@ -112,11 +145,17 @@ defmodule GameWeb.GameLive do
           {:ok, new_matrix} = matrix |> Result.and_then(&Matrix.update_element(&1, 2, {x, y}))
 
           socket
-          |> assign(loading: false, status: new_matrix)
+          |> assign(
+            loading: false,
+            status: new_matrix,
+            players: all_players,
+            current_user: uuid,
+            next_player: next_player
+          )
 
         false ->
           socket
-          |> assign(loading: true, status: nil)
+          |> assign(loading: true, status: nil, players: [], next_player: "", current_user: nil)
       end
 
     {:ok, socket |> assign(message: nil)}

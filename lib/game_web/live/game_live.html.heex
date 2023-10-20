@@ -4,25 +4,33 @@
 <div :if={@message} class="container mx-auto">
   <%= @message %>
 </div>
+<div :if={@players}>
+  <h1 class="text-2xl">
+    Currently playing: <%= @players |> get_players_names() %>
+  </h1>
+</div>
 <div :if={@status && @size} class="container mx-auto">
   <p>
     Grid size: <%= @size %>
   </p>
-  <h1 class="text-4xl">
-    It's <%= @player %>'s  turn now
+  <h1 :if={@current_user && @next_player && @current_user !== @next_player} class="text-4xl">
+    Wait for other people to play
+  </h1>
+  <h1 :if={@current_user && @next_player && @current_user == @next_player} class="text-4xl">
+    It's your turn now
   </h1>
   <div
     :if={@size}
     id="matrix"
     phx-window-keydown="handle_key_press"
     phx-update="replace"
-    class={"grid #{ "grid-cols-#{@size}"} #{if @size do "grid-cols-#{@size}" end} gap-2 mt-10"}
+    class={"grid grid-cols-6 #{ "grid-cols-#{@size}"} #{if @size do "grid-cols-#{@size}" end} gap-2 mt-10"}
   >
     <%= @status |> Enum.with_index |> Enum.map(fn({row, row_index}) -> %>
       <!-- EachRow -->
       <%= row |> Enum.with_index |> Enum.map(fn({_column, column_index}) -> %>
         <div
-          class="rounded h-24 font-semibold text-4xl text-center p-5"
+          class={"rounded h-24 font-semibold text-4xl text-center p-5 #{if @current_user !== @next_player do "opacity-25" end}"}
           style={"color: rgb(172 111 70); #{get_background_color(@status, row_index, column_index)}"}
         >
           <%= @status

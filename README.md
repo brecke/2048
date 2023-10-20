@@ -26,8 +26,8 @@ But how does that work? you ask. Good question. I'm not sure. I guess all player
 ## I can see obstacles in my way
 
 > I can see clearly now, the rain is gone
+
 > I can see all obstacles in my way
-> ...
 
 I digress. That's something I did to make things harder. I'm placing 3 obstacles randomly on the board placed to make everything harder. Not sure how much harder though. Good luck man. It should still be possible to win...
 

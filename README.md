@@ -7,7 +7,9 @@ I know. Just do this:
 
 Now you can visit [`localhost:4000/new`](http://localhost:4000/new) from your browser.
 
-The default grid size is 6 but you can change it on the URL like `localhost:4000/new?size=5`. Should work with other values but the layout might not cope :)
+The default grid size is 6 but you can change it on the URL like `localhost:4000/new?size=5`. Should work with other values but the layout might not cope :) Not sure what the bug is to be honest, it looks random.
+
+Anyway, you can always go to `game_live.html.heex` and make sure `grid-cols-6` becomes `grid-cols-4` if looking to play on a 4x4 board.
 
 # I'm a nerd
 
@@ -28,3 +30,9 @@ But how does that work? you ask. Good question. I'm not sure. I guess all player
 I digress. That's something I did to make things harder. I'm placing 3 obstacles randomly on the board placed to make everything harder. Not sure how much harder though. Good luck man. It should still be possible to win...
 
 ...I think.
+
+# Can I have a preview?
+
+![Screenshot 2023-10-20 at 16 22 36](https://github.com/brecke/2048/assets/19879/d273dfbf-eb7e-4dd0-9acc-a08691c96f79)
+![Screenshot 2023-10-20 at 12 18 52](https://github.com/brecke/2048/assets/19879/76ab0876-b061-489d-8ba8-b745a4310ccc)
+

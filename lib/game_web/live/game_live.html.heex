@@ -4,14 +4,19 @@
 <div :if={@message} class="container mx-auto">
   <%= @message %>
 </div>
-<div :if={@status} class="container mx-auto">
+<div :if={@status && @size} class="container mx-auto">
   <p>
     Grid size: <%= @size %>
   </p>
+  <h1 class="text-4xl">
+    It's <%= @player %>'s  turn now
+  </h1>
   <div
     :if={@size}
+    id="matrix"
     phx-window-keydown="handle_key_press"
-    class={"grid grid-cols-#{@size} gap-2 mt-10"}
+    phx-update="replace"
+    class={"grid #{ "grid-cols-#{@size}"} #{if @size do "grid-cols-#{@size}" end} gap-2 mt-10"}
   >
     <%= @status |> Enum.with_index |> Enum.map(fn({row, row_index}) -> %>
       <!-- EachRow -->

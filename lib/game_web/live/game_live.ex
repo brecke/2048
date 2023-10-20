@@ -1,10 +1,16 @@
 defmodule GameWeb.GameLive do
+  alias Game.Play
   alias GameWeb.MatrixUtils
   use GameWeb, :live_view
 
   alias GameWeb.Sliding
   alias MatrixReloaded.Matrix
   require IEx
+
+  @left "left"
+  @right "right"
+  @up "up"
+  @down "down"
 
   defp has_won?(socket) do
     %{status: matrix} = socket.assigns
@@ -18,48 +24,53 @@ defmodule GameWeb.GameLive do
     end
   end
 
-  defp move_left(socket) do
+  defp move(socket, direction) do
     %{status: matrix} = socket.assigns
-    socket |> assign(status: matrix |> Sliding.slide("left"))
+    socket |> assign(status: matrix |> Sliding.slide(direction), direction: direction)
   end
 
-  defp move_right(socket) do
-    %{status: matrix} = socket.assigns
-    socket |> assign(status: matrix |> Sliding.slide("right"))
+  defp broadcast_play(socket) do
+    %{status: matrix, player: player, direction: direction} = socket.assigns
+
+    Play.broadcast_play(%{
+      direction: direction,
+      player: switch_player(player),
+      status: matrix
+    })
+
+    socket
   end
 
-  defp move_down(socket) do
-    %{status: matrix} = socket.assigns
-    socket |> assign(status: matrix |> Sliding.slide("down"))
+  defp handle_move(socket, direction) do
+    socket |> move(direction) |> uncover_new_tile() |> has_won?() |> broadcast_play()
   end
 
-  defp move_up(socket) do
-    %{status: matrix} = socket.assigns
-    socket |> assign(status: matrix |> Sliding.slide("up"))
+  def handle_event("handle_key_press", %{"key" => "ArrowLeft"} = params, socket) do
+    {:noreply, socket |> handle_move(@left)}
   end
 
-  def handle_event("handle_key_press", %{"key" => "ArrowLeft"}, socket) do
-    socket = socket |> move_left() |> uncover_new_tile() |> has_won?()
-    {:noreply, socket}
+  def handle_event("handle_key_press", %{"key" => "ArrowRight"} = params, socket) do
+    {:noreply, socket |> handle_move(@right)}
   end
 
-  def handle_event("handle_key_press", %{"key" => "ArrowRight"}, socket) do
-    socket = socket |> move_right() |> uncover_new_tile() |> has_won?()
-    {:noreply, socket}
+  def handle_event("handle_key_press", %{"key" => "ArrowUp"} = params, socket) do
+    {:noreply, socket |> handle_move(@up)}
   end
 
-  def handle_event("handle_key_press", %{"key" => "ArrowUp"}, socket) do
-    socket = socket |> move_up() |> uncover_new_tile() |> has_won?()
-    {:noreply, socket}
-  end
-
-  def handle_event("handle_key_press", %{"key" => "ArrowDown"}, socket) do
-    socket = socket |> move_down() |> uncover_new_tile() |> has_won?()
-    {:noreply, socket}
+  def handle_event("handle_key_press", %{"key" => "ArrowDown"} = params, socket) do
+    {:noreply, socket |> handle_move(@down)}
   end
 
   def handle_event("handle_key_press", _params, socket) do
     {:noreply, socket}
+  end
+
+  defp switch_player(player) do
+    case player do
+      "player1" -> "player2"
+      "player2" -> "player1"
+      _ -> "player1"
+    end
   end
 
   defp uncover_new_tile(socket) do
@@ -75,23 +86,37 @@ defmodule GameWeb.GameLive do
     end
   end
 
+  def handle_info({:just_played, play}, socket) do
+    %{status: matrix, player: player, direction: direction} = play
+
+    socket = socket |> assign(status: matrix, player: player)
+
+    {:noreply, socket}
+  end
+
   def mount(params, _session, socket) do
     size = params |> Map.get("size", "6") |> String.to_integer()
+
+    # two players only for now
+    player = "player1"
+
+    socket = socket |> assign(size: size, player: player)
 
     socket =
       case connected?(socket) do
         true ->
+          Play.subscribe()
           matrix = Matrix.new(size, 0)
           x = :rand.uniform(size) - 1
           y = :rand.uniform(size) - 1
           {:ok, new_matrix} = matrix |> Result.and_then(&Matrix.update_element(&1, 2, {x, y}))
 
           socket
-          |> assign(loading: false, status: new_matrix, size: new_matrix |> length())
+          |> assign(loading: false, status: new_matrix)
 
         false ->
           socket
-          |> assign(loading: true, status: nil, size: size)
+          |> assign(loading: true, status: nil)
       end
 
     {:ok, socket |> assign(message: nil)}

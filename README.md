@@ -16,3 +16,15 @@ No worries. You can run some tests and build some dopamine with `mix test`. The 
 # I wanna play with my dog
 
 I got you covered! Just launch another window and go to the same URL. Now you can all play!
+
+But how does that work? you ask. Good question. I'm not sure. I guess all players need to cooperate until near the end... by the time there's a tile > 1024 every player should start thinking about winning on their turn. Does that make any sense? I'm not sure either.
+
+# I can see obstacles in my way
+
+> I can see clearly now, the rain is gone
+> I can see all obstacles in my way
+> ...
+
+I digress. That's something I did to make things harder. I'm placing 3 obstacles randomly on the board placed to make everything harder. Not sure how much harder though. Good luck man. It should still be possible to win...
+
+...I think.

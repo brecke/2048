@@ -115,6 +115,14 @@ defmodule GameWeb.GameLive do
 
   defp get_random_coord(size), do: :rand.uniform(size) - 1
 
+  defp trim_down_pid() do
+    self()
+    |> :erlang.pid_to_list()
+    |> List.delete_at(0)
+    |> List.delete_at(-1)
+    |> to_string()
+  end
+
   def mount(params, _session, socket) do
     size = params |> Map.get("size", "6") |> String.to_integer()
 
@@ -123,13 +131,7 @@ defmodule GameWeb.GameLive do
     socket =
       case connected?(socket) do
         true ->
-          # using pids to avoid authentication
-          uuid =
-            self()
-            |> :erlang.pid_to_list()
-            |> List.delete_at(0)
-            |> List.delete_at(-1)
-            |> to_string()
+          uuid = trim_down_pid()
 
           Presence.track(self(), "users", uuid, %{
             name: "player#{uuid}"

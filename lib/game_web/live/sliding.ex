@@ -6,8 +6,6 @@ defmodule GameWeb.Sliding do
   Single API for the sliding module
   """
   def slide(matrix, direction) do
-    size = matrix |> length()
-
     case direction do
       "left" ->
         matrix

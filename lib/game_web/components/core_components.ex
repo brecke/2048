@@ -19,10 +19,17 @@ defmodule GameWeb.CoreComponents do
   alias Phoenix.LiveView.JS
   import GameWeb.Gettext
 
-  def get_players_names(players), do: players |> Enum.map(&get_player_name/1) |> Enum.join(",")
+  def get_players_names(players),
+    do:
+      players
+      |> Enum.map(&get_player_name/1)
+      |> Enum.map(&(&1 |> String.replace("0.", "") |> String.replace(".0", "")))
+      |> Enum.join(",")
+
   def get_player_name({_, meta}), do: meta.metas |> hd() |> Map.get(:name)
 
   def hide_zeros(0), do: ""
+  def hide_zeros(-1), do: "X"
   def hide_zeros(tile), do: tile
 
   def get_background_color(matrix, row_index, column_index) do
@@ -32,6 +39,7 @@ defmodule GameWeb.CoreComponents do
       |> Enum.at(column_index)
 
     case value do
+      -1 -> "background-color: rgb(255 255 255); color: rgb(100, 100, 100);"
       0 -> "background-color: rgb(180 161 144)"
       1 -> "background-color: rgb(239 233 206)"
       2 -> "background-color: rgb(222 202 184)"

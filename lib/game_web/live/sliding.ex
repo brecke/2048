@@ -12,31 +12,51 @@ defmodule GameWeb.Sliding do
       "left" ->
         matrix
         |> slide_sideways(
-          &shift_left(&1, size),
+          &shift_left/2,
           &clear_left_padding/1
         )
 
       "right" ->
         matrix
         |> slide_sideways(
-          &shift_right(&1, size),
+          &shift_right/2,
           &clear_right_padding/1
         )
 
       "up" ->
         matrix
         |> slide_vertically(
-          &shift_left(&1, size),
+          &shift_left/2,
           &clear_left_padding/1
         )
 
       "down" ->
         matrix
         |> slide_vertically(
-          &shift_right(&1, size),
+          &shift_right/2,
           &clear_right_padding/1
         )
     end
+  end
+
+  defp group_values([]) do
+    []
+  end
+
+  defp group_values([head | tail]) do
+    group_values([head | tail], [], [])
+  end
+
+  defp group_values([-1 | tail], current_group, result) do
+    group_values(tail, [], result ++ [Enum.reverse(current_group)] ++ [-1])
+  end
+
+  defp group_values([head | tail], current_group, result) do
+    group_values(tail, [head | current_group], result)
+  end
+
+  defp group_values([], current_group, result) do
+    result ++ [Enum.reverse(current_group)]
   end
 
   # defp remove_zeros(row), do: row |> Enum.reject(&(&1 == 0))
@@ -49,11 +69,24 @@ defmodule GameWeb.Sliding do
     matrix
     |> Enum.with_index()
     |> Enum.map(fn {each_row, row_index} ->
+      slided_row =
+        each_row
+        |> group_values()
+        |> Enum.reject(&(&1 == []))
+        |> Enum.map(fn each_element ->
+          case is_list(each_element) do
+            true ->
+              each_element |> clear_padding_fn.() |> shift_to_fn.(length(each_element))
+
+            false ->
+              each_element
+          end
+        end)
+        |> List.flatten()
+
       case Matrix.update_row(
              matrix,
-             each_row
-             |> clear_padding_fn.()
-             |> shift_to_fn.(),
+             slided_row,
              {row_index, 0}
            )
            |> Result.and_then(&Matrix.get_row(&1, row_index)) do
@@ -72,8 +105,20 @@ defmodule GameWeb.Sliding do
       slided_col =
         each_col
         |> List.flatten()
-        |> clear_padding_fn.()
-        |> shift_to_fn.()
+        |> group_values()
+        |> Enum.reject(&(&1 == []))
+        |> Enum.map(fn each_subcolumn ->
+          case is_list(each_subcolumn) do
+            true ->
+              each_subcolumn
+              |> clear_padding_fn.()
+              |> shift_to_fn.(length(each_subcolumn))
+
+            false ->
+              each_subcolumn
+          end
+        end)
+        |> List.flatten()
         |> Enum.map(&to_array/1)
 
       case col_index do

@@ -30,7 +30,7 @@
       <!-- EachRow -->
       <%= row |> Enum.with_index |> Enum.map(fn({_column, column_index}) -> %>
         <div
-          class={"rounded h-24 font-semibold text-4xl text-center p-5 #{if @current_user !== @next_player do "opacity-25" end}"}
+          class={"rounded h-24 font-semibold text-4xl text-center p-5 pt-6 #{if @current_user !== @next_player do "opacity-25" end}"}
           style={"color: rgb(172 111 70); #{get_background_color(@status, row_index, column_index)}"}
         >
           <%= @status

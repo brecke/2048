@@ -113,6 +113,8 @@ defmodule GameWeb.GameLive do
     {:noreply, socket}
   end
 
+  defp get_random_coord(size), do: :rand.uniform(size) - 1
+
   def mount(params, _session, socket) do
     size = params |> Map.get("size", "6") |> String.to_integer()
 
@@ -140,9 +142,22 @@ defmodule GameWeb.GameLive do
 
           Play.subscribe()
           matrix = Matrix.new(size, 0)
-          x = :rand.uniform(size) - 1
-          y = :rand.uniform(size) - 1
-          {:ok, new_matrix} = matrix |> Result.and_then(&Matrix.update_element(&1, 2, {x, y}))
+
+          # Gonna place 3 obstacles randomly
+          {:ok, new_matrix} =
+            matrix
+            |> Result.and_then(
+              &Matrix.update_element(&1, 2, {get_random_coord(size), get_random_coord(size)})
+            )
+            |> Result.and_then(
+              &Matrix.update_element(&1, -1, {get_random_coord(size), get_random_coord(size)})
+            )
+            |> Result.and_then(
+              &Matrix.update_element(&1, -1, {get_random_coord(size), get_random_coord(size)})
+            )
+            |> Result.and_then(
+              &Matrix.update_element(&1, -1, {get_random_coord(size), get_random_coord(size)})
+            )
 
           socket
           |> assign(
